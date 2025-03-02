@@ -1,0 +1,10 @@
+{
+  "@@locale": "en",
+  "appTitle": "Currency Converter",
+  "settings": "Settings",
+  "language": "Language",
+  "darkMode": "Dark Mode",
+  "accentColor": "Accent Color",
+  "currencyRateSource": "Currency Rate Source",
+  "exchangeRateAPI": "ExchangeRate-API"
+}

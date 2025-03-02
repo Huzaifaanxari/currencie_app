@@ -1,0 +1,10 @@
+{
+  "@@locale": "es",
+  "appTitle": "Convertidor de Divisas",
+  "settings": "Configuración",
+  "language": "Idioma",
+  "darkMode": "Modo Oscuro",
+  "accentColor": "Color de Acento",
+  "currencyRateSource": "Fuente de Tasas de Cambio",
+  "exchangeRateAPI": "ExchangeRate-API"
+}
