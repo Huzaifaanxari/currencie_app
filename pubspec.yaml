@@ -20,6 +20,7 @@ dependencies:
   flex_color_scheme: ^7.1.2
   animated_toggle_switch: ^0.5.1
   cupertino_icons: ^1.0.8
+  fl_chart: ^0.66.0
 
 dev_dependencies:
   flutter_test:

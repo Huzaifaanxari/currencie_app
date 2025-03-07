@@ -1,3 +1,5 @@
+// lib/screens/home_screen.dart
+import 'package:currencie_app/screens/currency_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/currency_provider.dart';
@@ -44,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final currencyProvider = Provider.of<CurrencyProvider>(context);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
@@ -68,25 +71,42 @@ class _HomeScreenState extends State<HomeScreen> {
             // Currency display with flag and currency
             Row(
               children: [
-                const CircleAvatar(
-                  backgroundImage: AssetImage(
-                      'assets/flags/us.png'), // Add flag image in assets
-                  radius: 20,
-                ),
-                const SizedBox(width: 10),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'USD',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      'United States Dollar',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ],
+                GestureDetector(
+                  onTap: () async {
+                    final selectedCurrency = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const CurrencyListScreen()),
+                    );
+                    if (selectedCurrency != null) {
+                      await currencyProvider.loadRates(selectedCurrency);
+                    }
+                  },
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: AssetImage(
+                            'assets/flags/${currencyProvider.selectedCurrency.toLowerCase()}.png'),
+                        radius: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            currencyProvider.selectedCurrency,
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Currency', // You can add full currency name here if needed
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
                 const Spacer(),
                 IconButton(
@@ -99,6 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 )
               ],
             ),
+
             const SizedBox(height: 20),
 
             // Amount display
