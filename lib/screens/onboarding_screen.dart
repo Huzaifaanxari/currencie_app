@@ -1,76 +1,75 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class OnboardingScreen extends StatelessWidget {
+class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
-  Future<void> _completeOnboarding(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('onboarding_complete', true);
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-    );
+  @override
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingScreenState extends State<OnboardingScreen> {
+  final PageController _pageController = PageController();
+  int _currentIndex = 0;
+
+  final List<String> images = [
+    'assets/onboarding1.png',
+    'assets/onboarding2.png',
+    'assets/onboarding3.png',
+  ];
+
+  void _nextPage() {
+    if (_currentIndex < images.length - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: PageView(
+      body: Stack(
         children: [
-          _buildPage(
-            image: 'assets/onboarding1.png',
-            title: 'Welcome',
-            description: 'Easily convert currencies worldwide.',
+          PageView.builder(
+            controller: _pageController,
+            itemCount: images.length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              return Container(
+                padding: const EdgeInsets.all(20),
+                alignment: Alignment.center,
+                color: Colors.black,
+                child: Image.asset(images[index]),
+              );
+            },
           ),
-          _buildPage(
-            image: 'assets/onboarding2.png',
-            title: 'Fast & Reliable',
-            description: 'Get real-time currency exchange rates.',
-          ),
-          _buildPage(
-            image: 'assets/onboarding3.png',
-            title: 'Get Started',
-            description: 'Let\'s begin!',
-            isLast: true,
-            onPressed: () => _completeOnboarding(context),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPage({
-    required String image,
-    required String title,
-    required String description,
-    bool isLast = false,
-    VoidCallback? onPressed,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(image, height: 300),
-          const SizedBox(height: 30),
-          Text(title, style: const TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
-          Text(description, style: const TextStyle(fontSize: 18, color: Colors.grey), textAlign: TextAlign.center),
-          if (isLast)
-            Padding(
-              padding: const EdgeInsets.only(top: 40),
-              child: ElevatedButton(
-                onPressed: onPressed,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.yellow[700],
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                ),
-                child: const Text('Start', style: TextStyle(fontSize: 18)),
+          Positioned(
+            bottom: 40,
+            left: 20,
+            right: 20,
+            child: ElevatedButton(
+              onPressed: _nextPage,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: Colors.yellow[700],
+              ),
+              child: Text(
+                _currentIndex == images.length - 1 ? 'Get Started' : 'Next',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
+          ),
         ],
       ),
     );

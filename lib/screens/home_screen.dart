@@ -156,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     child: Text(
                       value,
-                      style: const TextStyle(fontSize: 24),
+                      style: const TextStyle(fontSize: 20),
                     ),
                   );
                 },
