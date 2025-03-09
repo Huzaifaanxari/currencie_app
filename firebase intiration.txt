@@ -1,0 +1,12 @@
+flutte cli globally active
+dart pub global activate flutterfire_cli
+
+configuration command 
+flutterfire configure
+
+set environment variable
+C:\Users\Dell\AppData\Local\Pub\Cache\bin
+
+update yaml file in dependencies
+  firebase_core: ^3.12.1
+  firebase_auth: ^5.5.1

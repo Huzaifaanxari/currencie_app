@@ -1,4 +1,3 @@
-// lib/screens/home_screen.dart
 import 'package:currencie_app/screens/currency_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,12 +13,15 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String amount = '';
+  String fromCurrency = 'USD'; // Default from currency
+  String toCurrency = 'EUR'; // Default to currency
+  double convertedAmount = 0.0; // Holds the converted amount
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<CurrencyProvider>(context, listen: false).loadRates('USD');
+      Provider.of<CurrencyProvider>(context, listen: false).loadRates(fromCurrency);
     });
   }
 
@@ -32,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         amount += value;
       }
+      _convertCurrency(); // Convert currency when amount changes
     });
   }
 
@@ -40,6 +43,18 @@ class _HomeScreenState extends State<HomeScreen> {
       if (amount.isNotEmpty) {
         amount = amount.substring(0, amount.length - 1);
       }
+      _convertCurrency(); // Recalculate conversion
+    });
+  }
+
+  void _convertCurrency() {
+    final currencyProvider = Provider.of<CurrencyProvider>(context, listen: false);
+    final double fromRate = currencyProvider.exchangeRates[fromCurrency] ?? 1.0;
+    final double toRate = currencyProvider.exchangeRates[toCurrency] ?? 1.0;
+
+    setState(() {
+      double inputAmount = double.tryParse(amount) ?? 0.0;
+      convertedAmount = (inputAmount / fromRate) * toRate;
     });
   }
 
@@ -68,25 +83,26 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Currency display with flag and currency
+            // FROM CURRENCY SELECTOR + INPUT AMOUNT
             Row(
               children: [
                 GestureDetector(
                   onTap: () async {
                     final selectedCurrency = await Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) => const CurrencyListScreen()),
+                      MaterialPageRoute(builder: (context) => const CurrencyListScreen()),
                     );
                     if (selectedCurrency != null) {
-                      await currencyProvider.loadRates(selectedCurrency);
+                      setState(() {
+                        fromCurrency = selectedCurrency;
+                      });
+                      _convertCurrency();
                     }
                   },
                   child: Row(
                     children: [
                       CircleAvatar(
-                        backgroundImage: AssetImage(
-                            'assets/flags/${currencyProvider.selectedCurrency.toLowerCase()}.png'),
+                        backgroundImage: AssetImage('assets/flags/${fromCurrency.toLowerCase()}.png'),
                         radius: 20,
                       ),
                       const SizedBox(width: 10),
@@ -94,14 +110,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            currencyProvider.selectedCurrency,
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                            fromCurrency,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
-                          Text(
-                            'Currency', // You can add full currency name here if needed
-                            style: const TextStyle(
-                                fontSize: 14, color: Colors.grey),
+                          const Text(
+                            'From Currency',
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
                           ),
                         ],
                       ),
@@ -109,29 +123,62 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () {
-                    setState(() {
-                      amount = '';
-                    });
-                  },
-                )
+                Text(
+                  amount.isEmpty ? '0.00' : amount,
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(width: 10),
+                const Icon(Icons.arrow_forward, size: 24),
               ],
             ),
 
             const SizedBox(height: 20),
 
-            // Amount display
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                amount.isEmpty ? '0.00 \$' : '$amount \$',
-                style: const TextStyle(
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
+            // TO CURRENCY SELECTOR + CONVERTED AMOUNT
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () async {
+                    final selectedCurrency = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const CurrencyListScreen()),
+                    );
+                    if (selectedCurrency != null) {
+                      setState(() {
+                        toCurrency = selectedCurrency;
+                      });
+                      _convertCurrency();
+                    }
+                  },
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: AssetImage('assets/flags/${toCurrency.toLowerCase()}.png'),
+                        radius: 20,
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            toCurrency,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const Text(
+                            'To Currency',
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                const Spacer(),
+                Text(
+                  convertedAmount.toStringAsFixed(2),
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
 
             const SizedBox(height: 20),
@@ -148,18 +195,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 itemBuilder: (context, index) {
                   final keys = [
-                    '7',
-                    '8',
-                    '9',
-                    '4',
-                    '5',
-                    '6',
-                    '1',
-                    '2',
-                    '3',
-                    '.',
-                    '0',
-                    '<'
+                    '7', '8', '9',
+                    '4', '5', '6',
+                    '1', '2', '3',
+                    '.', '0', '<'
                   ];
                   final value = keys[index];
                   return ElevatedButton(
@@ -186,13 +225,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 20),
 
-            // Convert button
+            // Convert button (optional since conversion is automatic)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Add conversion logic
-                },
+                onPressed: _convertCurrency,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Colors.yellow[700],
@@ -202,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),

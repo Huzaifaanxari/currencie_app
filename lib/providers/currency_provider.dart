@@ -8,9 +8,11 @@ class CurrencyProvider with ChangeNotifier {
   bool isLoading = false;
   String _selectedCurrency = 'USD';
   Map<String, List<double>> _historicalRates = {};
+  Map<String, double> _exchangeRates = {}; // Added exchangeRates map
 
   String get selectedCurrency => _selectedCurrency;
   CurrencyModel? get currencyData => _currencyModel;
+  Map<String, double> get exchangeRates => _exchangeRates; // Getter added
 
   List<MapEntry<String, double>> get currencyList {
     if (_currencyModel == null) return [];
@@ -28,6 +30,7 @@ class CurrencyProvider with ChangeNotifier {
     try {
       final data = await _service.fetchRates(baseCurrency);
       _currencyModel = CurrencyModel.fromJson(data);
+      _exchangeRates = Map<String, double>.from(data['rates']); // Store exchange rates
       _selectedCurrency = baseCurrency;
     } catch (e) {
       print('Error loading rates: $e');
