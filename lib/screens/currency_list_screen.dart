@@ -50,6 +50,7 @@ class _CurrencyListScreenState extends State<CurrencyListScreen> {
                     itemCount: filteredCurrencies.length,
                     itemBuilder: (context, index) {
                       final currency = filteredCurrencies[index];
+
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundImage: AssetImage(
@@ -62,17 +63,30 @@ class _CurrencyListScreenState extends State<CurrencyListScreen> {
                             Text('${currency.value.toStringAsFixed(2)}'),
                         trailing: IconButton(
                           icon: const Icon(Icons.show_chart),
-                          onPressed: () {
-                            final historicalRates =
-                                currencyProvider.getHistoricalRates(
-                                    currency.key);
+                          onPressed: () async {
+                            // Show loading indicator
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (context) => const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+
+                            // Load historical rates
+                            await currencyProvider.loadHistoricalRates(currency.key);
+
+                            // Close loading indicator
+                            if (mounted) Navigator.pop(context);
+
+                            // Navigate after data is loaded
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
                                     ExchangeRateDetailsScreen(
                                   currency: currency.key,
-                                  historicalRates: historicalRates,
+                                  historicalRates: currencyProvider.getHistoricalRates(currency.key),
                                 ),
                               ),
                             );
