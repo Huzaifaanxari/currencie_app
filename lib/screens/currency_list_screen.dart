@@ -79,17 +79,38 @@ class _CurrencyListScreenState extends State<CurrencyListScreen> {
                             // Close loading indicator
                             if (mounted) Navigator.pop(context);
 
-                            // Navigate after data is loaded
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    ExchangeRateDetailsScreen(
-                                  currency: currency.key,
-                                  historicalRates: currencyProvider.getHistoricalRates(currency.key),
+                            // Get and format historical data
+                            final historicalRates = currencyProvider.getHistoricalRates(currency.key)
+                                .asMap()
+                                .entries
+                                .map((entry) => {
+                                      'date': DateTime.now()
+                                          .subtract(Duration(days: entry.key))
+                                          .toIso8601String()
+                                          .split('T')[0], // Converts to "YYYY-MM-DD"
+                                      'rate': entry.value,
+                                    })
+                                .toList();
+
+                            // Navigate only if data is available
+                            if (historicalRates.isNotEmpty) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      ExchangeRateDetailsScreen(
+                                    currency: currency.key,
+                                    historicalRates: historicalRates,
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('No historical data available.'),
+                                ),
+                              );
+                            }
                           },
                         ),
                         onTap: () {

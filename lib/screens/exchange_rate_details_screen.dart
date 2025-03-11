@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart'; // For formatting dates
 
 class ExchangeRateDetailsScreen extends StatelessWidget {
   final String currency;
-  final List<double> historicalRates;
+  final List<Map<String, dynamic>> historicalRates; // Stores {"date": "YYYY-MM-DD", "rate": 1.0857}
 
   const ExchangeRateDetailsScreen({
     super.key,
@@ -46,13 +47,18 @@ class ExchangeRateDetailsScreen extends StatelessWidget {
                           bottomTitles: AxisTitles(
                             sideTitles: SideTitles(
                               showTitles: true,
-                              reservedSize: 30,
+                              reservedSize: 40,
                               getTitlesWidget: (value, meta) {
                                 int index = value.toInt();
                                 if (index >= 0 && index < historicalRates.length) {
+                                  String dateStr = historicalRates[index]['date'];
+                                  DateTime date = DateTime.parse(dateStr);
                                   return Padding(
                                     padding: const EdgeInsets.only(top: 8.0),
-                                    child: Text('Day ${index + 1}'),
+                                    child: Text(
+                                      DateFormat.MMMd().format(date), // Example: "Mar 7"
+                                      style: TextStyle(fontSize: 12),
+                                    ),
                                   );
                                 }
                                 return Container();
@@ -62,9 +68,9 @@ class ExchangeRateDetailsScreen extends StatelessWidget {
                           leftTitles: AxisTitles(
                             sideTitles: SideTitles(
                               showTitles: true,
-                              reservedSize: 40,
+                              reservedSize: 50,
                               getTitlesWidget: (value, meta) =>
-                                  Text(value.toStringAsFixed(2)),
+                                  Text(value.toStringAsFixed(4)), // Higher precision
                             ),
                           ),
                         ),
@@ -75,7 +81,7 @@ class ExchangeRateDetailsScreen extends StatelessWidget {
                                 .entries
                                 .map((e) => FlSpot(
                                       e.key.toDouble(),
-                                      e.value,
+                                      e.value['rate'],
                                     ))
                                 .toList(),
                             isCurved: true,
