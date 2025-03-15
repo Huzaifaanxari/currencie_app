@@ -57,7 +57,7 @@ class ExchangeRateDetailsScreen extends StatelessWidget {
                                     padding: const EdgeInsets.only(top: 8.0),
                                     child: Text(
                                       DateFormat.MMMd().format(date), // Example: "Mar 7"
-                                      style: TextStyle(fontSize: 12),
+                                      style: const TextStyle(fontSize: 12),
                                     ),
                                   );
                                 }

@@ -51,7 +51,7 @@ class CurrencyService {
             double eurToTarget = rates[currency];
 
             double usdToTarget = eurToTarget / eurToUsd;
-            historicalRates.add(usdToTarget);
+            historicalRates.add(eurToUsd);
 
             print('✅ [$formattedDate] $currency Rate (via EUR): $usdToTarget');
           } else {

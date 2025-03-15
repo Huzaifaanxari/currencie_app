@@ -1,8 +1,12 @@
+import 'package:currencie_app/screens/conversion_history_screen.dart';
 import 'package:currencie_app/screens/currency_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/currency_provider.dart';
 import 'settings_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,7 +25,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<CurrencyProvider>(context, listen: false).loadRates(fromCurrency);
+      Provider.of<CurrencyProvider>(context, listen: false)
+          .loadRates(fromCurrency);
     });
   }
 
@@ -47,8 +52,49 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _saveConversion() async {
+    String? userId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in to save conversions.')),
+      );
+      return;
+    }
+
+    if (amount.isEmpty || convertedAmount == 0.0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid amount to save!')),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(userId)
+          .collection("conversions")
+          .add({
+        "fromCurrency": fromCurrency,
+        "toCurrency": toCurrency,
+        "amount": double.parse(amount),
+        "convertedAmount": convertedAmount,
+        "timestamp": FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Conversion saved successfully!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving conversion: $e')),
+      );
+    }
+  }
+
   void _convertCurrency() {
-    final currencyProvider = Provider.of<CurrencyProvider>(context, listen: false);
+    final currencyProvider =
+        Provider.of<CurrencyProvider>(context, listen: false);
     final double fromRate = currencyProvider.exchangeRates[fromCurrency] ?? 1.0;
     final double toRate = currencyProvider.exchangeRates[toCurrency] ?? 1.0;
 
@@ -68,6 +114,20 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Currency Converter'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ConversionHistoryScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _saveConversion,
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
@@ -90,7 +150,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: () async {
                     final selectedCurrency = await Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const CurrencyListScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const CurrencyListScreen()),
                     );
                     if (selectedCurrency != null) {
                       setState(() {
@@ -102,7 +163,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     children: [
                       CircleAvatar(
-                        backgroundImage: AssetImage('assets/flags/${fromCurrency.toLowerCase()}.png'),
+                        backgroundImage: AssetImage(
+                            'assets/flags/${fromCurrency.toLowerCase()}.png'),
                         radius: 20,
                       ),
                       const SizedBox(width: 10),
@@ -111,7 +173,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Text(
                             fromCurrency,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                           const Text(
                             'From Currency',
@@ -125,7 +188,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Spacer(),
                 Text(
                   amount.isEmpty ? '0.00' : amount,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(width: 10),
                 const Icon(Icons.arrow_forward, size: 24),
@@ -141,7 +205,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: () async {
                     final selectedCurrency = await Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const CurrencyListScreen()),
+                      MaterialPageRoute(
+                          builder: (context) => const CurrencyListScreen()),
                     );
                     if (selectedCurrency != null) {
                       setState(() {
@@ -153,7 +218,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     children: [
                       CircleAvatar(
-                        backgroundImage: AssetImage('assets/flags/${toCurrency.toLowerCase()}.png'),
+                        backgroundImage: AssetImage(
+                            'assets/flags/${toCurrency.toLowerCase()}.png'),
                         radius: 20,
                       ),
                       const SizedBox(width: 10),
@@ -162,7 +228,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Text(
                             toCurrency,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                           const Text(
                             'To Currency',
@@ -176,7 +243,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Spacer(),
                 Text(
                   convertedAmount.toStringAsFixed(2),
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -195,10 +263,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 itemBuilder: (context, index) {
                   final keys = [
-                    '7', '8', '9',
-                    '4', '5', '6',
-                    '1', '2', '3',
-                    '.', '0', '<'
+                    '7',
+                    '8',
+                    '9',
+                    '4',
+                    '5',
+                    '6',
+                    '1',
+                    '2',
+                    '3',
+                    '.',
+                    '0',
+                    '<'
                   ];
                   final value = keys[index];
                   return ElevatedButton(
