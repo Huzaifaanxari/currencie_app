@@ -54,7 +54,7 @@ class _CurrencyListScreenState extends State<CurrencyListScreen> {
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundImage: AssetImage(
-                            'assets/flags/${currency.key.toLowerCase()}.png',
+                            'flags/${currency.key.toLowerCase()}.png',
                           ),
                           backgroundColor: theme.colorScheme.primaryContainer,
                         ),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/locale_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -57,6 +58,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: Text(AppLocalizations.of(context)!.currencyRateSource),
             subtitle: Text(AppLocalizations.of(context)!.exchangeRateAPI),
             trailing: const Icon(Icons.info_outline),
+          ),
+          const Divider(),
+          ListTile(
+            title: Text("Log Out"),
+            leading: const Icon(Icons.logout, color: Colors.red),
+            onTap: () {
+              _showLogoutConfirmation(context);
+            },
           ),
         ],
       ),
@@ -131,5 +140,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
       default:
         return 'English';
     }
+  }
+
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(" Are you sure?"),
+          content: const Text("Do you really want to log out? We'll miss you! "),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _logout(context);
+              },
+              child: const Text("Yes, Log Out"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _logout(BuildContext context) {
+    // Perform logout logic here (e.g., clearing user session, tokens, etc.)
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
   }
 }

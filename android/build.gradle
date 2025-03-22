@@ -13,9 +13,9 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 dependencies {
-    classpath 'com.google.gms:google-services:4.3.10' // Ensure it's up-to-date
+    classpath 'com.android.tools.build:gradle:8.1.1' // Or latest version
+    classpath 'com.google.gms:google-services:4.4.0' // Ensure this line is present
 }
-
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }

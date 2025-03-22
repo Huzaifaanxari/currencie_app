@@ -14,9 +14,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentIndex = 0;
 
   final List<String> images = [
-    'assets/onboarding1.png',
-    'assets/onboarding2.png',
-    'assets/onboarding3.png',
+    'onboarding1.png',
+    'onboarding2.png',
+    'onboarding3.png',
   ];
 
   void _nextPage() {
@@ -50,7 +50,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               return Container(
                 padding: const EdgeInsets.all(20),
                 alignment: Alignment.center,
-                color: Colors.black,
+                color: Colors.white,
                 child: Image.asset(images[index]),
               );
             },

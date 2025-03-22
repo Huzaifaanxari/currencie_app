@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../providers/currency_provider.dart';
 import 'settings_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,9 +16,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String amount = '';
-  String fromCurrency = 'USD'; // Default from currency
-  String toCurrency = 'EUR'; // Default to currency
-  double convertedAmount = 0.0; // Holds the converted amount
+  String fromCurrency = 'USD';
+  String toCurrency = 'EUR';
+  double convertedAmount = 0.0;
 
   @override
   void initState() {
@@ -39,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         amount += value;
       }
-      _convertCurrency(); // Convert currency when amount changes
+      _convertCurrency();
     });
   }
 
@@ -48,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (amount.isNotEmpty) {
         amount = amount.substring(0, amount.length - 1);
       }
-      _convertCurrency(); // Recalculate conversion
+      _convertCurrency();
     });
   }
 
@@ -91,10 +90,9 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
   }
-
   void _convertCurrency() {
     final currencyProvider =
-        Provider.of<CurrencyProvider>(context, listen: false);
+    Provider.of<CurrencyProvider>(context, listen: false);
     final double fromRate = currencyProvider.exchangeRates[fromCurrency] ?? 1.0;
     final double toRate = currencyProvider.exchangeRates[toCurrency] ?? 1.0;
 
@@ -107,9 +105,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currencyProvider = Provider.of<CurrencyProvider>(context);
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: theme.colorScheme.background,
       appBar: AppBar(
         title: const Text('Currency Converter'),
@@ -139,185 +137,156 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      body: SafeArea(
         child: Column(
           children: [
-            // FROM CURRENCY SELECTOR + INPUT AMOUNT
-            Row(
-              children: [
-                GestureDetector(
-                  onTap: () async {
-                    final selectedCurrency = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const CurrencyListScreen()),
-                    );
-                    if (selectedCurrency != null) {
-                      setState(() {
-                        fromCurrency = selectedCurrency;
-                      });
-                      _convertCurrency();
-                    }
-                  },
-                  child: Row(
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // FROM CURRENCY SELECTOR + INPUT AMOUNT
+                  Row(
                     children: [
-                      CircleAvatar(
-                        backgroundImage: AssetImage(
-                            'assets/flags/${fromCurrency.toLowerCase()}.png'),
-                        radius: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            fromCurrency,
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          const Text(
-                            'From Currency',
-                            style: TextStyle(fontSize: 14, color: Colors.grey),
-                          ),
-                        ],
+                      _buildCurrencySelector(true),
+                      const Spacer(),
+                      Text(
+                        amount.isEmpty ? '0.00' : amount,
+                        style: const TextStyle(
+                            fontSize: 32, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
-                ),
-                const Spacer(),
-                Text(
-                  amount.isEmpty ? '0.00' : amount,
-                  style: const TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: 10),
-                const Icon(Icons.arrow_forward, size: 24),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // TO CURRENCY SELECTOR + CONVERTED AMOUNT
-            Row(
-              children: [
-                GestureDetector(
-                  onTap: () async {
-                    final selectedCurrency = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const CurrencyListScreen()),
-                    );
-                    if (selectedCurrency != null) {
-                      setState(() {
-                        toCurrency = selectedCurrency;
-                      });
-                      _convertCurrency();
-                    }
-                  },
-                  child: Row(
+                  const SizedBox(height: 20),
+                  // TO CURRENCY SELECTOR + CONVERTED AMOUNT
+                  Row(
                     children: [
-                      CircleAvatar(
-                        backgroundImage: AssetImage(
-                            'assets/flags/${toCurrency.toLowerCase()}.png'),
-                        radius: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            toCurrency,
-                            style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          const Text(
-                            'To Currency',
-                            style: TextStyle(fontSize: 14, color: Colors.grey),
-                          ),
-                        ],
+                      _buildCurrencySelector(false),
+                      const Spacer(),
+                      Text(
+                        convertedAmount.toStringAsFixed(2),
+                        style: const TextStyle(
+                            fontSize: 32, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
-                ),
-                const Spacer(),
-                Text(
-                  convertedAmount.toStringAsFixed(2),
-                  style: const TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Number pad
-            Expanded(
-              child: GridView.builder(
-                itemCount: 12,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 1.2,
-                ),
-                itemBuilder: (context, index) {
-                  final keys = [
-                    '7',
-                    '8',
-                    '9',
-                    '4',
-                    '5',
-                    '6',
-                    '1',
-                    '2',
-                    '3',
-                    '.',
-                    '0',
-                    '<'
-                  ];
-                  final value = keys[index];
-                  return ElevatedButton(
-                    onPressed: () {
-                      if (value == '<') {
-                        _onDelete();
-                      } else {
-                        _onNumberTap(value);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      shape: const CircleBorder(),
-                      padding: const EdgeInsets.all(16),
-                      backgroundColor: theme.colorScheme.surfaceVariant,
-                    ),
-                    child: Text(
-                      value,
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                  );
-                },
+                ],
               ),
             ),
+            const Spacer(),
 
-            const SizedBox(height: 20),
-
-            // Convert button (optional since conversion is automatic)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _convertCurrency,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.yellow[700],
-                ),
-                child: const Text(
-                  'Convert',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
+            // Number Pad
+            _buildNumberPad(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCurrencySelector(bool isFromCurrency) {
+    String currency = isFromCurrency ? fromCurrency : toCurrency;
+
+    return GestureDetector(
+      onTap: () async {
+        final selectedCurrency = await Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => const CurrencyListScreen()),
+        );
+        if (selectedCurrency != null) {
+          setState(() {
+            if (isFromCurrency) {
+              fromCurrency = selectedCurrency;
+            } else {
+              toCurrency = selectedCurrency;
+            }
+          });
+          _convertCurrency();
+        }
+      },
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundImage:
+            AssetImage('flags/${currency.toLowerCase()}.png'),
+            radius: 20,
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                currency,
+                style: const TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                isFromCurrency ? 'From' : 'To',
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNumberPad() {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: GridView.builder(
+        shrinkWrap: true,
+        itemCount: 12,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 1.5,
+        ),
+        itemBuilder: (context, index) {
+          final keys = [
+            '7',
+            '8',
+            '9',
+            '4',
+            '5',
+            '6',
+            '1',
+            '2',
+            '3',
+            '.',
+            '0',
+            '<'
+          ];
+          final value = keys[index];
+
+          return ElevatedButton(
+            onPressed: () {
+              if (value == '<') {
+                _onDelete();
+              } else {
+                _onNumberTap(value);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.all(16),
+              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+            ),
+            child: value == '<'
+                ? const Icon(Icons.backspace, size: 24)
+                : Text(
+              value,
+              style: const TextStyle(fontSize: 24),
+            ),
+          );
+        },
       ),
     );
   }
